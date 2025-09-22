@@ -1,0 +1,103 @@
+@startchen
+
+entity "Пользователь" as user {
+    id
+    email
+    телефон
+    пароль
+    дата_регистрации
+}
+
+entity "Дом" as location {
+    id
+    пользователь_id
+    адрес
+    название
+    дата_создания
+}
+
+entity "Устройство" as device {
+    id
+    дом_id
+    тип_устройства_id
+    название
+    статус
+    дата_подключения
+}
+
+entity "Подписка" as subscription {
+    id
+    пользователь_id
+    тарифный_план
+    статус
+    дата_начала
+    дата_окончания
+}
+
+entity "Команда" as command {
+    id
+    устройство_id
+    команда
+    параметры
+    статус
+    временная_метка
+}
+
+entity "Сервис устройств" as device_service {
+    регистрация_устройств
+    управление_статусом
+    отправка_команд
+}
+
+relationship "Регистрация дома" as register_house {
+}
+
+relationship "Привязка устройства" as bind_device {
+}
+
+relationship "Управление устройством" as control_device {
+}
+
+relationship "Мониторинг данных" as monitor_data {
+}
+
+relationship "Уведомления" as notifications {
+}
+
+relationship "Оформление подписки" as create_subscription {
+}
+
+relationship "Отправка команды" as send_command {
+}
+
+user -1- register_house
+register_house -N- location
+
+user -1- create_subscription
+create_subscription -N- subscription
+
+location -1- bind_device
+bind_device -N- device
+
+device -1- send_command
+send_command -N- command
+
+user -1- control_device
+control_device -N- device_service
+device_service -N- device
+
+user -1- monitor_data
+
+device_service -N- device
+device_service -N- command
+device_service -N- send_command
+device_service -N- notifications
+
+subscription -1- user
+subscription -1- control_device
+subscription -1- monitor_data
+subscription -1- notifications
+
+notifications -N- monitor_data
+
+@endchen

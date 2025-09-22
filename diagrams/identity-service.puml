@@ -1,0 +1,31 @@
+@startuml Компонентная диаграмма - Identity Service
+title Identity Service - внутренние компоненты
+
+package "Identity Service" {
+  [Auth Controller] as auth_ctrl
+  [User Controller] as user_ctrl
+  [Auth Logic] as auth_logic
+  [User Repository] as user_repo
+}
+
+database "Identity DB" as db <<PostgreSQL>>
+
+auth_ctrl --> auth_logic : uses
+user_ctrl --> user_repo : uses
+auth_logic --> user_repo : uses
+user_repo --> db : SQL
+
+note left of auth_ctrl
+  Обрабатывает эндпоинты:
+  POST /auth/login
+  POST /auth/register
+  POST /auth/refresh
+end note
+
+note right of user_ctrl
+  Обрабатывает эндпоинты:
+  GET/PUT /users/me
+  GET /users/me/houses
+end note
+
+@enduml

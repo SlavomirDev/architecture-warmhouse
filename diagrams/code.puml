@@ -1,0 +1,82 @@
+@startuml
+class "devices/{id}/command" as CommandController {
+  - DeviceCommandService
+  + post_device_command(id: str, command: dict)
+}
+
+class DeviceCommandService {
+  - DeviceRepository
+  - DevicePermissionValidator
+  - CommandGateway
+  - EventPublisher
+  + execute_command(user_id: str, device_id: str, command: dict)
+  + validate_device_permission(user_id: str, device_id: str)
+  + send_command_to_device(device_id: str, command: dict)
+  + publish_command_event(device_id: str, command: dict, status: str)
+}
+
+class DeviceRepository {
+  - DatabaseClient
+  + get_device_by_id(device_id: str)
+  + get_device_type(device_id: str)
+  + update_device_status(device_id: str, status: str)
+  + get_user_devices(user_id: str)
+}
+
+class DevicePermissionValidator {
+  - DeviceRepository
+  + validate_user_device_access(user_id: str, device_id: str)
+  + validate_command_permission(device_type: str, command: str)
+}
+
+class CommandGateway {
+  - HTTPDeviceClient
+  + send_http_command(device_id: str, command: dict)
+  + get_protocol_by_device_type(device_type: str)
+}
+
+class EventPublisher {
+  - MessageQueueClient
+  + publish_command_event(device_id: str, command: dict, status: str)
+  + publish_device_status_change(device_id: str, old_status: str, new_status: str)
+}
+
+class HTTPDeviceClient {
+  - HttpClient
+  + send_command(device_url: str, command: dict)
+  + get_device_status(device_url: str)
+}
+
+class MessageQueueClient {
+  - MessageBrokerConfig
+  + connect()
+  + publish(exchange: str, routing_key: str, message: dict)
+  + consume(queue: str, callback: function)
+}
+
+CommandController --> DeviceCommandService
+DeviceCommandService --> DeviceRepository
+DeviceCommandService --> DevicePermissionValidator
+DeviceCommandService --> CommandGateway
+DeviceCommandService --> EventPublisher
+CommandGateway --> HTTPDeviceClient
+EventPublisher --> MessageQueueClient
+DevicePermissionValidator --> DeviceRepository
+
+note right of CommandController
+  REST API Controller
+  Валидация входных данных
+  Базовая аутентификация
+end note
+
+note right of DeviceCommandService
+  Бизнес-логика обработки команд
+  Валидация прав доступа
+  Маршрутизация команд
+  Публикация событий
+end note
+
+note right of EventPublisher
+  Публикация событий в брокер сообщений
+end note
+@enduml

@@ -1,0 +1,34 @@
+@startuml Компонентная диаграмма - Notification Service
+title Notification Service - внутренние компоненты
+
+package "Notification Service" {
+  [Message Handler] as msg_handler
+  [Notification Logic] as logic
+  [Email Sender] as email_sender
+  [Push Sender] as push_sender
+}
+
+queue "Message Broker" as mq
+node "Почтовый сервис" as email_ext
+node "Push уведомления" as push_ext
+
+mq --> msg_handler : consume event
+msg_handler --> logic : handle
+logic --> email_sender : send
+logic --> push_sender : send
+email_sender --> email_ext : API/SMTP
+push_sender --> push_ext : API
+
+note right of msg_handler
+  Слушает очереди:
+  notifications.email
+  user.subscription.expired
+end note
+
+note left of logic
+  Определяет тип уведомления
+  Выбирает шаблон
+  Маршрутизирует
+end note
+
+@enduml

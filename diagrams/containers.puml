@@ -1,0 +1,54 @@
+@startuml Контейнерная диаграмма
+
+!define DEVICEBOUNDARY device
+!define QUEUEBOUNDARY queue
+
+skinparam groupInheritance 2
+title Контейнерная диаграмма
+
+actor "Пользователь" as user
+actor "Администратор" as admin_user
+node "Интернет эквайринг" as payment
+node "Почтовый сервис" as email
+node "Физические Устройства" as devices
+
+cloud {
+
+    node "API Gateway" as gateway
+    database "Identity DB" as db_id <<PostgreSQL>>
+    database "Devices DB" as db_dev <<PostgreSQL>>
+    database "Billing DB" as db_bill <<PostgreSQL>>
+    queue "Message Broker" as mq
+
+    frame "Микросервисы" {
+        [Identity Service] as id_srv
+        [Devices Service] as dev_srv
+        [Billing Service] as bill_srv
+        [Notification Service] as notif_srv
+    }
+}
+
+' Connections
+user --> gateway : "HTTPS"
+admin_user --> gateway : "HTTPS"
+dev_srv --> devices : "Получение данных"
+
+admin_user --> notif_srv : "Создание шаблонов писем"
+admin_user --> bill_srv : "Промоакции, просмотр платежей"
+
+gateway --> id_srv : "HTTP"
+gateway --> dev_srv : "HTTP"
+gateway --> bill_srv : "HTTP"
+
+id_srv --> db_id : "SQL"
+dev_srv --> db_dev : "SQL"
+bill_srv --> db_bill : "SQL"
+
+dev_srv --> mq : "События Устройств"
+bill_srv --> mq : "События биллинга"
+mq --> notif_srv : "Уведомления"
+
+bill_srv --> payment : "HTTPS API"
+notif_srv --> email : "SMTP/API"
+
+@enduml

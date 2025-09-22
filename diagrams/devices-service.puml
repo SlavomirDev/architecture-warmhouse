@@ -1,0 +1,33 @@
+@startuml Компонентная диаграмма - Devices Service
+title Devices Service - внутренние компоненты
+
+package "Devices Service" {
+  [Device Controller] as dev_ctrl
+  [Command Controller] as cmd_ctrl
+  [Device Management Logic] as logic
+  [Device Repository] as repo
+  [Message Handler] as msg_handler
+}
+
+database "Devices DB" as db <<PostgreSQL>>
+queue "Message Broker" as mq
+
+dev_ctrl --> logic : uses
+cmd_ctrl --> logic : uses
+logic --> repo : uses
+logic --> msg_handler : publish command
+repo --> db : SQL
+msg_handler --> mq : AMQP
+
+note left of dev_ctrl
+  Эндпоинты:
+  GET/POST /devices
+  GET/PUT /devices/{id}
+end note
+
+note right of cmd_ctrl
+  Эндпоинт:
+  POST /devices/{id}/command
+end note
+
+@enduml
