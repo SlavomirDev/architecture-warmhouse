@@ -1,0 +1,32 @@
+@startuml Компонентная диаграмма - Billing Service
+title Billing Service - внутренние компоненты
+
+package "Billing Service" {
+  [Subscription Controller] as sub_ctrl
+  [Billing Logic] as logic
+  [Subscription Repository] as repo
+  [Message Handler] as msg_handler
+}
+
+database "Billing DB" as db <<PostgreSQL>>
+queue "Message Broker" as mq
+
+sub_ctrl --> logic : uses
+logic --> repo : uses
+logic --> msg_handler : publish event
+repo --> db : SQL
+msg_handler --> mq : AMQP
+
+note left of sub_ctrl
+  Эндпоинты:
+  GET /subscriptions
+  POST /subscriptions/upgrade
+end note
+
+note right of logic
+  Проверяет активность подписки
+  Генерирует события:
+  user.subscription.expired
+end note
+
+@enduml
